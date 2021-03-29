@@ -1,4 +1,5 @@
 pragma solidity >=0.4.22 <0.9.0;
+//SPDX-License-Identifier: MIT
 import "./DappToken.sol";
 
 contract DappTokenSale {
@@ -12,17 +13,22 @@ contract DappTokenSale {
         address _buyer, uint256 _amount
     );
 
-    constructor (DappToken _token_contract, uint256 _token_price) public {
+    constructor (DappToken _tokenContract, uint256 _tokenPrice) public {
         admin = msg.sender;
-        tokenContract = _token_contract;
-        tokenPrice = _token_price;
+        tokenContract = _tokenContract;
+        tokenPrice = _tokenPrice;
     }
 
-    function multiply(uint x,uint y) internal pure returns (uint z){
+    function multiply(uint x,uint y) internal pure returns (uint z)
+    {
         require(y == 0 || (z = x*y)/ y == x);
     }
-    function buyTokens(uint256 _numberOfTokens) public payable{
+
+    function buyTokens(uint256 _numberOfTokens) public payable
+    {
         require(msg.value == multiply(_numberOfTokens,tokenPrice));
+        require(tokenContract.balanceOf(address(this)) >= _numberOfTokens);
+        require(tokenContract.transfer(msg.sender, _numberOfTokens));
         tokensSold += _numberOfTokens;
         emit Sell(msg.sender, _numberOfTokens);
     }

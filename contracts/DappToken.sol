@@ -1,5 +1,5 @@
 pragma solidity >=0.4.22 <0.9.0;
-
+//SPDX-License-Identifier: MIT
 contract DappToken{
     string public name = "Dapp Token";
     string public symbol = "Dapp Symbol";

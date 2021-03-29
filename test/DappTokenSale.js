@@ -1,8 +1,12 @@
-const DappTokenSale = artifacts.require("DappTokenSale");
+const DappTokenSale = artifacts.require("./DappTokenSale");
+const DappToken = artifacts.require("./DappToken");
 
 contract('DappTokenSale', (accounts) => {
     var tokenSaleInstance;
+    var tokenInstance;
     var tokenPrice = 1000000000000000; // = 1e15
+    var tokensAvailable = 750000;
+    var admin = accounts[0];
     var buyer = accounts[1];
     var noOfTokens;
     it('initializes the contract with the correct values', () => {
@@ -21,8 +25,13 @@ contract('DappTokenSale', (accounts) => {
     });
 
     it('facilitates token buying', () => {
-        return DappTokenSale.deployed().then(instance => {
+        return DappToken.deployed().then(instance => {
+            tokenInstance = instance;
+            return DappTokenSale.deployed();
+        }).then((instance) => {
             tokenSaleInstance = instance;
+            return tokenInstance.transfer(tokenSaleInstance.address, tokensAvailable,{from: admin});
+        }).then((receipt) => {
             noOfTokens = 10;
             return tokenSaleInstance.buyTokens(noOfTokens, {from: buyer, value: noOfTokens*tokenPrice});
         }).then(receipt => {
@@ -33,9 +42,18 @@ contract('DappTokenSale', (accounts) => {
             return tokenSaleInstance.tokensSold();
         }).then(amount => {
             assert.equal(amount.toNumber(),noOfTokens,'increments the number of Tokens sold');
+            return tokenInstance.balanceOf(buyer);
+        }).then(balance => {
+            assert.equal(balance.toNumber(),noOfTokens);
+            return tokenInstance.balanceOf(tokenSaleInstance.address);
+        }).then(balance=> {
+            assert.equal(balance.toNumber(),tokensAvailable - noOfTokens);
             return tokenSaleInstance.buyTokens(noOfTokens,{from: buyer, value: 1});
         }).then(assert.fail).catch(error => {
             assert(error.message.indexOf('revert') >= 0,'msg.value must be equal to tokens in wei');
+            return tokenSaleInstance.buyTokens(800000,{from: buyer, value: noOfTokens*tokenPrice});
+        }).then(assert.fail).catch(error => {
+            assert(error.message.indexOf('revert') >= 0,'cannot purchase more tokens than available');
         });
     });
 });
