@@ -32,4 +32,12 @@ contract DappTokenSale {
         tokensSold += _numberOfTokens;
         emit Sell(msg.sender, _numberOfTokens);
     }
+
+    function endTokenSale() public {
+        //Require that only admin can end a sale
+        require(msg.sender == admin);
+        //Transfer remaining Dapp Tokens to the admin
+        require(tokenContract.transfer(admin, tokenContract.balanceOf(address(this))));
+        //Destroy the token
+    }
 }
